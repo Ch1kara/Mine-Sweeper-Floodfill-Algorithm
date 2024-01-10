@@ -38,7 +38,18 @@ class Interface():
         current = (0, 0)
         for row in range(self.grid.size[0]):
             for col in range(self.grid.size[1]):
-                image = self.images['normal']
+                current_node = self.grid.node_location(row, col)
+                image = self.typeImage(current_node)
                 self.screen.blit(image, current)
                 current = current[0] + self.node_size[0], current[1]
             current = 0, current[1] + self.node_size[1]
+
+    def typeImage(self, node):
+        """Determines the type of node """
+        bombtype = ''
+        if node.bomb:
+            bombtype = 'unclicked-bomb'
+        else:
+            bombtype = 'normal'
+
+        return self.images[bombtype]
