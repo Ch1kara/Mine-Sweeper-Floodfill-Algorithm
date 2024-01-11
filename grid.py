@@ -5,6 +5,9 @@ import random
 class Grid():
     def __init__(self, size, prob):
         self.size = size
+        self.lost = False
+        self.non_bombs = 0
+        self.nodes_clicked = 0
         self.grid = []
         for row in range(size[0]):  # list of lists with each node having either a bomb or no bomb
             row = []
@@ -13,15 +16,18 @@ class Grid():
                     bomb = True
                 else:
                     bomb = False
+                    self.non_bombs += 1
                 node = Node(bomb)
                 row.append(node)
             self.grid.append(row)
         self.create_neighbors()
 
     def node_location(self, row, col):
+        """Returns the node given the row and column within the grid"""
         return self.grid[row][col]
 
     def create_neighbors(self):
+        """Adds the neighbors of a given node to the initialized neighbor variable as well as if they have bombs"""
         for i in range(len(self.grid)):
             for j in range(len(self.grid[0])):
                 current_node = self.grid[i][j]
@@ -34,3 +40,19 @@ class Grid():
                             continue
                         neighbors.append(self.grid[k][h])
                 current_node.set_neighbors_and_bombs(neighbors)
+
+    def check_win(self):
+        """Determines if player has won if the number of non-bomb nodes is equal to the nodes clicked"""
+        return self.non_bombs == self.nodes_clicked
+
+    def floodfill(self, node):  # https://github.com/vosketalor/minesweeper/blob/main/grid.py
+        # https: // vaibhavsethia07.medium.com/flood-fill-algorithm-1424de9863da
+        """Implemenation of the floodfill algorithm to recursively click on all non-bomb squares nearby"""
+        if node.bomb_count != 0:  # base case
+            return
+        for neighbor in node.neighbors:
+            if not neighbor.clicked and not neighbor.bomb:  # revealed already if clicked and leave alone
+                # if neighbor has bomb
+                neighbor.clicked = True
+                self.nodes_clicked += 1
+                self.floodfill(neighbor)  # recursively call floodfill to click all neighboring non-bomb nodes

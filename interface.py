@@ -23,6 +23,19 @@ class Interface():
                 if event.type == pg.QUIT:
                     status = 'quit'
                 if event.type == pg.MOUSEBUTTONDOWN:
+                    if pg.mouse.get_pressed()[0]:
+                        x, y = pg.mouse.get_pos()  # using the position to find out which node was clicked
+                        row, col = y // self.node_size[0], x // self.node_size[1]
+                        current_node = self.grid.node_location(row, col)
+                        current_node.clicked = True  # mark as true to track total number of nodes clicked
+                        if current_node.flagged:  # left click won't do anything to a flagged node
+                            continue
+                        if current_node.bomb:
+                            self.grid.lost = True  # maybe works, maybe doesn't
+                        self.grid.nodes_clicked += 1
+                        self.grid.check_win()
+                        self.grid.floodfill(current_node)
+
                     if pg.mouse.get_pressed()[2]:  # https://stackoverflow.com/questions/34287938/how-to-distinguish
                         # -left-click-right-click-mouse-clicks-in-pygame
                         x, y = pg.mouse.get_pos()  # using the position to find out which node was clicked
@@ -46,20 +59,17 @@ class Interface():
 
     def typeimage(self, node):
         """Determines the type of node """
-        # used for testing
-        # if node.bomb:
-        #     bombtype = 'unclicked-bomb'
-        # else:
-        #     bombtype = node.bomb_count
-        imagetype = ''
         if node.clicked:
-            pass
+            if node.bomb:
+                image = 'clicked-bomb'
+            else:
+                image = str(node.bomb_count)
         else:
             if node.flagged:
-                imagetype = 'flag'
+                image = 'flag'
             else:
-                imagetype = 'normal'
-        return self.images[str(imagetype)]
+                image = 'normal'
+        return self.images[str(image)]
 
     def draw(self):
         """Draws the board starting from the top left"""
