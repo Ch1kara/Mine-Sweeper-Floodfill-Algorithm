@@ -20,5 +20,14 @@ class Node():
         else:
             self.flagged = True
 
+    def reset(self, status):
+        """Resets all the initialized variables. Used in the grid class reset function"""
+        if status != 'reset':
+            return
+        else:
+            self.clicked = False
+            self.flagged = False
+            self.neighbors = []
+            self.bomb_count = 0
 
 

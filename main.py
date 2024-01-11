@@ -1,10 +1,10 @@
 from interface import Interface
 from grid import Grid
 
-size = (9, 9)
+size = (20, 20)
 bombprob = 0.1
 grid = Grid(size, bombprob)
-screensize = (800, 800)
+screensize = (1000, 1000)
 
 game = Interface(grid, screensize)
 game.gameloop()

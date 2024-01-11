@@ -1,11 +1,12 @@
 from node import Node
 import random
+import pygame as pg
 
 
-class Grid():
+class Grid:
     def __init__(self, size, prob):
+        self.prob = prob
         self.size = size
-        self.lost = False
         self.non_bombs = 0
         self.nodes_clicked = 0
         self.grid = []
@@ -28,8 +29,10 @@ class Grid():
 
     def create_neighbors(self):
         """Adds the neighbors of a given node to the initialized neighbor variable as well as if they have bombs"""
-        for i in range(len(self.grid)):
-            for j in range(len(self.grid[0])):
+        rows = self.size[0]
+        cols = self.size[1]
+        for i in range(rows):
+            for j in range(cols):
                 current_node = self.grid[i][j]
                 neighbors = []
                 for k in range(i - 1, i + 2):
@@ -56,3 +59,25 @@ class Grid():
                 neighbor.clicked = True
                 self.nodes_clicked += 1
                 self.floodfill(neighbor)  # recursively call floodfill to click all neighboring non-bomb nodes
+
+    def reset(self, status):
+        if status != 'reset':
+            return
+        else:
+            self.non_bombs = 0
+            self.grid = []
+            for row in range(self.size[0]):  # list of lists with each node having either a bomb or no bomb
+                row = []
+                for col in range(self.size[1]):
+                    if random.random() < self.prob:
+                        bomb = True
+                    else:
+                        bomb = False
+                        self.non_bombs += 1
+                    node = Node(bomb)
+                    node.reset('reset')  # resets the node completely and wipes all info
+                    row.append(node)
+                self.grid.append(row)
+            self.create_neighbors()
+
+
