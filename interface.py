@@ -23,13 +23,18 @@ class Interface:
         self.screen = pg.display.set_mode(self.screensize)
         pg.display.set_caption('Mine Sweeper')
 
-        status = 'normal'
+        status = 'menu'
         while status != 'quit':
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     status = 'quit'
                 if event.type == pg.MOUSEBUTTONDOWN:
                     click_loc = event.pos  # for buttons
+                    if status == 'menu':
+                        if quit_b.collidepoint(click_loc):
+                            status = 'quit'
+                        if game_b.collidepoint(click_loc):
+                            status = 'normal'
                     if status == 'win':
                         if quit_b.collidepoint(click_loc):
                             status = 'quit'
@@ -50,11 +55,11 @@ class Interface:
                             if current_node.flagged:
                                 continue
                             current_node.clicked = True  # mark as true to track total number of nodes clicked
+                            self.grid.nodes_clicked += 1
                             if current_node.bomb:
                                 self.draw('lost')
                                 pg.time.wait(300)
                                 status = 'lost'
-                            self.grid.nodes_clicked += 1
                             self.grid.floodfill(current_node)
                             if self.grid.check_win():
                                 status = 'win'
@@ -63,17 +68,23 @@ class Interface:
                             # -left-click-right-click-mouse-clicks-in-pygame
                             current_node.flag()
 
+            if status == 'menu':
+                self.background("images/flag.png")
+                game_b = self.create_button(250, 300, 300, 100, 50, 'Start Game')
+                quit_b = self.create_button(300, 450, 200, 100, 60, "quit")
+
             if status == 'normal':
                 self.draw()
 
             if status == 'win':
-                pg.time.wait(300)
-                quit_b = self.create_button(400, 400, 200, 100, 20, 'Quit')
+                self.message('You Are Pretty Good', 250, 100, 300, 100, 3, 30)
+                restart_b = self.create_button(300, 250, 200, 100, 30, 'Restart')
+                quit_b = self.create_button(300, 450, 200, 100, 30, 'Quit')
 
             if status == 'lost':
-                self.message('You Suck', 400, 100, 200, 100, 3, 30)
-                restart_b = self.create_button(400, 250, 200, 100, 20, 'Restart')
-                quit_b = self.create_button(400, 450, 200, 100, 20, 'Quit')
+                self.message('You Suck', 300, 100, 200, 100, 3, 30)
+                restart_b = self.create_button(300, 250, 200, 100, 30, 'Restart')
+                quit_b = self.create_button(300, 450, 200, 100, 30, 'Quit')
 
             if status == 'reset':
                 self.grid.reset('reset')
@@ -158,7 +169,6 @@ class Interface:
         text = font.render(f'{text}', True, pg.Color('black'))
         text_rect = text.get_rect(center=button.center)
         self.screen.blit(text, text_rect)
-        pg.display.update()
         return button
 
     def message(self, message, x, y, width, height, border_width, font_size):
@@ -177,3 +187,11 @@ class Interface:
 
         # connecting the text with the rectangle as one object
         self.screen.blit(text, text_rect)
+
+    def background(self, image_file):
+        """Puts a background on the screen"""
+        image = pg.image.load(image_file)
+        image_size = (self.screensize[0], self.screensize[1])
+        
+        image_rect = image.get_rect()
+        self.screen.blit(image, image_rect)

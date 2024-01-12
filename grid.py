@@ -1,6 +1,5 @@
 from node import Node
 import random
-import pygame as pg
 
 
 class Grid:
