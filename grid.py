@@ -59,24 +59,27 @@ class Grid:
                 self.nodes_clicked += 1
                 self.floodfill(neighbor)  # recursively call floodfill to click all neighboring non-bomb nodes
 
-    def reset(self, status):
-        if status != 'reset':
-            return
-        else:
-            self.non_bombs = 0
-            self.grid = []
-            for row in range(self.size[0]):  # list of lists with each node having either a bomb or no bomb
-                row = []
-                for col in range(self.size[1]):
-                    if random.random() < self.prob:
-                        bomb = True
-                    else:
-                        bomb = False
-                        self.non_bombs += 1
-                    node = Node(bomb)
-                    node.reset('reset')  # resets the node completely and wipes all info
-                    row.append(node)
-                self.grid.append(row)
-            self.create_neighbors()
+    def reset(self):
+        self.non_bombs = 0
+        self.grid = []
+        for row in range(self.size[0]):  # list of lists with each node having either a bomb or no bomb
+            row = []
+            for col in range(self.size[1]):
+                if random.random() < self.prob:
+                    bomb = True
+                else:
+                    bomb = False
+                    self.non_bombs += 1
+                node = Node(bomb)
+                node.reset('reset')  # resets the node completely and wipes all info
+                row.append(node)
+            self.grid.append(row)
+        self.create_neighbors()
 
-
+    def difficulty(self, level):
+        if level == 'easy':
+            return  Grid((9,9), 0.1)
+        if level == 'medium':
+            return Grid((16, 16), 0.15)
+        if level == 'hard':
+            return Grid((20, 20), 0.2)

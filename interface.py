@@ -1,5 +1,6 @@
 import pygame as pg
 import os
+import time
 
 # colors
 black = (0, 0, 0)
@@ -22,6 +23,7 @@ class Interface:
         pg.init()
         self.screen = pg.display.set_mode(self.screensize)
         pg.display.set_caption('Mine Sweeper')
+        start_ticks = pg.time.get_ticks()
 
         status = 'menu'
         while status != 'quit':
@@ -34,7 +36,27 @@ class Interface:
                         if quit_b.collidepoint(click_loc):
                             status = 'quit'
                         if game_b.collidepoint(click_loc):
+                            nullify_click = True  # click would register on the next screen as well
+                            status = 'difficulty'
+
+                    if status == 'difficulty':
+                        if nullify_click:  # nullifies first click
+                            nullify_click = False
+                            continue
+                        if easy.collidepoint(click_loc):
+                            # already preset to easy so no need to redefine
+                            self.change_difficulty('easy')
+                            nullify_click = True
                             status = 'normal'
+                        if med.collidepoint(click_loc):
+                            self.change_difficulty('medium')
+                            nullify_click = True
+                            status = 'normal'
+                        if hard.collidepoint(click_loc):
+                            self.change_difficulty('hard')
+                            nullify_click = True
+                            status = 'normal'
+
                     if status == 'win':
                         if quit_b.collidepoint(click_loc):
                             status = 'quit'
@@ -51,6 +73,9 @@ class Interface:
                     current_node = self.grid.node_location(row, col)
 
                     if status == 'normal':
+                        if nullify_click:
+                            nullify_click = False
+                            continue
                         if pg.mouse.get_pressed()[0]:
                             if current_node.flagged:
                                 continue
@@ -70,29 +95,53 @@ class Interface:
 
             if status == 'menu':
                 self.background("images/flag.png")
-                game_b = self.create_button(250, 300, 300, 100, 50, 'Start Game')
-                quit_b = self.create_button(300, 450, 200, 100, 60, "quit")
+                game_b = self.create_button(300, 300, 300, 100, 50, 'Start Game')
+                quit_b = self.create_button(350, 450, 200, 100, 60, "quit")
+
+            if status == 'difficulty':
+                self.background("images/wrong-flag.png")
+                easy = self.create_button(100, 400, 200, 100, 30, 'easy')
+                med = self.create_button(350, 400, 200, 100, 30, 'medium')
+                hard = self.create_button(600, 400, 200, 100, 30, 'hard')
 
             if status == 'normal':
                 self.draw()
 
             if status == 'win':
-                self.message('You Are Pretty Good', 250, 100, 300, 100, 3, 30)
-                restart_b = self.create_button(300, 250, 200, 100, 30, 'Restart')
-                quit_b = self.create_button(300, 450, 200, 100, 30, 'Quit')
+                win_sfx = pg.mixer.Sound("sounds/fairywin.mp3")
+                win_sfx.play()
+                self.message('You Are Pretty Good', 250, 150, 400, 100, 3, 30)
+                restart_b = self.create_button(300, 350, 300, 100, 30, 'Restart')
+                quit_b = self.create_button(300, 550, 300, 100, 30, 'Quit')
 
             if status == 'lost':
-                self.message('You Suck', 300, 100, 200, 100, 3, 30)
-                restart_b = self.create_button(300, 250, 200, 100, 30, 'Restart')
-                quit_b = self.create_button(300, 450, 200, 100, 30, 'Quit')
+                self.message('You Suck', 350, 150, 200, 100, 3, 30)
+                restart_b = self.create_button(350, 350, 200, 100, 30, 'Restart')
+                quit_b = self.create_button(350, 550, 200, 100, 30, 'Quit')
+
+                loss_sfx1 = pg.mixer.Sound("sounds/buildup.mp3")
+                loss_sfx2 = pg.mixer.Sound("sounds/bomb.mp3")
+                # https://stackoverflow.com/questions/30720665/countdown-timer-in-pygame
+                # seconds = (pg.time.get_ticks() - start_ticks) / 1000
+                # for i in range(5):
+                #     loss_sfx1.play()
+                #     if seconds > 5:
+                #         loss_sfx2.play()
+                #         start_ticks = pg.time.get_ticks()
+                loss_sfx2.play(fade_ms=500)
 
             if status == 'reset':
-                self.grid.reset('reset')
-                status = 'normal'
+                self.grid.reset()
+                status = 'difficulty'
 
             pg.display.flip()
         pg.quit()
 
+    def change_difficulty(self, difficulty):
+        """Resets Interface variables and grid based on difficulty"""
+        self.grid = self.grid.difficulty(difficulty)
+        self.node_size = self.screensize[1] // self.grid.size[1], self.screensize[0] // self.grid.size[0]
+        self.loadImages()
     def loadImages(self):
         """Maps png image to a pygame image object"""
         self.images = {}  # dictionary with key as string before .png and value as the image object
@@ -192,6 +241,5 @@ class Interface:
         """Puts a background on the screen"""
         image = pg.image.load(image_file)
         image_size = (self.screensize[0], self.screensize[1])
-        
-        image_rect = image.get_rect()
-        self.screen.blit(image, image_rect)
+        image = pg.transform.scale(image, image_size)
+        self.screen.blit(image, (0, 0))
